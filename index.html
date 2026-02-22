@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3D Math Symbols Calculator</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #0a0a0a;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    /* Calculator on top */
+    .calculator {
+      position: relative;
+      z-index: 1;
+      margin: 50px auto;
+      width: 300px;
+      background: rgba(0,0,0,0.7);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0px 8px 20px rgba(0,0,0,0.8);
+      color: #fff;
+    }
+
+    .display {
+      background-color: #222;
+      color: #0ff;
+      font-size: 2em;
+      text-align: right;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      gap: 10px;
+    }
+
+    button {
+      padding: 15px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #555;
+      color: #fff;
+      transition: 0.2s;
+    }
+    button:hover { background: #777; }
+    .operator { background: #f60; }
+    .equal { background: #0f0; color: #000; }
+    .clear { background: #f00; }
+  </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="calculator">
+  <div class="display" id="display">0</div>
+  <div class="buttons">
+    <button class="clear" onclick="clearDisplay()">C</button>
+    <button onclick="appendValue('%')">%</button>
+    <button onclick="appendValue('/')">/</button>
+    <button class="operator" onclick="appendValue('*')">*</button>
+
+    <button onclick="appendValue('7')">7</button>
+    <button onclick="appendValue('8')">8</button>
+    <button onclick="appendValue('9')">9</button>
+    <button class="operator" onclick="appendValue('-')">-</button>
+
+    <button onclick="appendValue('4')">4</button>
+    <button onclick="appendValue('5')">5</button>
+    <button onclick="appendValue('6')">6</button>
+    <button class="operator" onclick="appendValue('+')">+</button>
+
+    <button onclick="appendValue('1')">1</button>
+    <button onclick="appendValue('2')">2</button>
+    <button onclick="appendValue('3')">3</button>
+    <button class="equal" onclick="calculate()">=</button>
+
+    <button onclick="appendValue('0')" style="grid-column: span 2;">0</button>
+    <button onclick="appendValue('.')">.</button>
+  </div>
+</div>
+
+<script>
+/* =======================
+   3D Rotating Math Symbols
+   ======================= */
+const canvas = document.getElementById("bgCanvas");
+const ctx = canvas.getContext("2d");
+
+let width, height;
+function resize() {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+}
+window.addEventListener("resize", resize);
+resize();
+
+const symbols = ["=", "-", "x", "/", "π", "∫", "+", "Σ"];
+const particles = [];
+const numParticles = 120;
+
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.x = Math.random()*600 - 300;
+    this.y = Math.random()*600 - 300;
+    this.z = Math.random()*600 - 300;
+    this.size = Math.random()*20 + 10;
+    this.symbol = symbols[Math.floor(Math.random()*symbols.length)];
+    this.angleX = Math.random()*0.02;
+    this.angleY = Math.random()*0.02;
+  }
+  update() {
+    // Rotate around X and Y axes
+    let cosX = Math.cos(this.angleX), sinX = Math.sin(this.angleX);
+    let cosY = Math.cos(this.angleY), sinY = Math.sin(this.angleY);
+
+    let y1 = this.y * cosX - this.z * sinX;
+    let z1 = this.y * sinX + this.z * cosX;
+    this.y = y1;
+    this.z = z1;
+
+    let x1 = this.x * cosY - this.z * sinY;
+    let z2 = this.x * sinY + this.z * cosY;
+    this.x = x1;
+    this.z = z2;
+  }
+  draw() {
+    const scale = 500 / (500 + this.z);
+    const x2d = this.x*scale + width/2;
+    const y2d = this.y*scale + height/2;
+    const fontSize = this.size*scale;
+    ctx.font = `${fontSize}px Arial`;
+    ctx.fillStyle = "#0ff";
+    ctx.fillText(this.symbol, x2d, y2d);
+  }
+}
+
+for(let i=0;i<numParticles;i++) particles.push(new Particle());
+
+function animate() {
+  ctx.fillStyle = "#0a0a0a";
+  ctx.fillRect(0,0,width,height);
+  particles.forEach(p => {
+    p.update();
+    p.draw();
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* =======================
+   Calculator Logic
+   ======================= */
+let display = document.getElementById("display");
+let currentInput = "";
+
+function appendValue(val) {
+  currentInput += val;
+  display.innerText = currentInput;
+}
+
+function clearDisplay() {
+  currentInput = "";
+  display.innerText = "0";
+}
+
+function calculate() {
+  try {
+    let result = eval(currentInput);
+    display.innerText = result;
+    currentInput = result.toString();
+  } catch {
+    display.innerText = "Error";
+    currentInput = "";
+  }
+}
+</script>
+
+</body>
+</html>
